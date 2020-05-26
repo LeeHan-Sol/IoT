@@ -7,5 +7,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <unistd.h>
+#include <pthread.h>
+#include <semaphore.h>
 
 #endif

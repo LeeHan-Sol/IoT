@@ -1,8 +1,8 @@
 CC = gcc
-CFLAGS = -W -Wall
+CFLAGS = -W -Wall -g
 TARGET = IoT
 OBJECTS = DHT11.o TextLCD.o IoT.o
-LDFLAGS = -lwiringPi -lwiringPiDev 
+LDFLAGS = -lwiringPi -lwiringPiDev -lpthread 
 
 all : $(TARGET)
 
