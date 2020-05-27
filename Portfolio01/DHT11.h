@@ -3,6 +3,7 @@
 #define DHT11_H
 
 #include "IoT.h"
+#include "LED.h"
 
 #define MAXTIMINGS 85
 #define DHTPIN 0

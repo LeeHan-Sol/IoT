@@ -24,14 +24,6 @@ int main(void)
 
 	if (wiringPiSetup() == -1) exit(1);
 
-//pinMode(DHTPIN, OUTPUT);
-//digitalWrite(DHTPIN, LOW);
-//delay(18);
-//
-//digitalWrite(DHTPIN, HIGH);
-//delayMicroseconds(40);
-//pinMode(DHTPIN, INPUT);
-
 	fd = wiringPiI2CSetup(I2C_ADDR);
 	lcd_init(); // setup LCD
 
@@ -51,14 +43,14 @@ int main(void)
 		return -1;
 	}
 
-	if(pthread_join(*thread_DHT11_id, NULL) != 0)
-	{
-		fputs("pthread_join(DHT11) error\n", stdout);
-		return -1;
-	}
 	if(pthread_join(*thread_TextLCD_id, NULL) != 0)
 	{
 		fputs("pthread_join(TextLCD) error\n", stdout);
+		return -1;
+	}
+	if(pthread_join(*thread_DHT11_id, NULL) != 0)
+	{
+		fputs("pthread_join(DHT11) error\n", stdout);
 		return -1;
 	}
 
@@ -90,11 +82,20 @@ int main(void)
 
 void * thread_TextLCD(void * arg)
 {
-	sem_wait(&sem_one);
 	for(;;)
 	{
 		fprintf(stdout, "\t\tthread_TextLCD\n\t\t\thumidity, temperature : %p, %p\n", humidity, temperature);
+		if(strncmp(temperature, "\0", 1) == 0)
+		{
+			fputs("\tplz wait for loading\n", stdout);
+			ClrLcd();
+			lcdLoc(LINE1);
+			typeln("Plz Wait for");
+			lcdLoc(LINE2);
+			typeln("      loading...");
+		}
 
+		sem_wait(&sem_one);
 		delay(2000);
 		ClrLcd();
 		lcdLoc(LINE1);
@@ -113,7 +114,7 @@ void * thread_DHT11(void * arg)
 	{
 		fprintf(stdout, "\t\tDHT11\n");
 
-		read_dht11_dat(humidity, temperature);
+		read_dht11_data(humidity, temperature);
 		delay(2000);
 		sem_post(&sem_one);
 	}
