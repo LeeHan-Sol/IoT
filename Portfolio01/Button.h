@@ -3,7 +3,6 @@
 
 #include "IoT.h"
 
-
 void init_Button();
 int push_flag_Button(int, const int);
 char * push_increase_Button(const int, char *);

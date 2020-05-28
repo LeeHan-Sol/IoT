@@ -3,7 +3,6 @@
 
 #include "IoT.h"
 
-
 void init_LED();
 void LED_ON(const int);
 void LED_OFF(const int);
