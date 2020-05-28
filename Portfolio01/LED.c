@@ -1,24 +1,24 @@
 #include "LED.h"
 
-void initLED()
+void init_LED()
 {
-	pinMode(LEDPIN, OUTPUT);
-	digitalWrite(LEDPIN, HIGH);
+	pinMode(LEDALARM, OUTPUT);
+	digitalWrite(LEDALARM, HIGH);
 
 	return ;
 }
 
-void LED_ON()
+void LED_ON(const int pin)
 {
-	digitalWrite(LEDPIN, LOW);
+	digitalWrite(pin, LOW);
 	fputs("LED ON\n", stdout);
 
 	return ;
 }
 
-void LED_OFF()
+void LED_OFF(const int pin)
 {
-	digitalWrite(LEDPIN, HIGH);
+	digitalWrite(pin, HIGH);
 	fputs("LED OFF\n", stdout);
 
 	return ;

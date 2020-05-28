@@ -35,7 +35,8 @@ void typeChar(char val)   {
 // this allows use of any size string
 void typeln(const char *s)   {
 
-  while ( *s ) lcd_byte(*(s++), LCD_CHR);
+  while(*s)
+	  lcd_byte(*(s++), LCD_CHR);
 
 }
 
@@ -46,6 +47,7 @@ void lcd_byte(int bits, int mode)   {
   // mode = 1 for data, 0 for command
   int bits_high;
   int bits_low;
+
   // uses the two half byte writes to LCD
   bits_high = mode | (bits & 0xF0) | LCD_BACKLIGHT ;
   bits_low = mode | ((bits << 4) & 0xF0) | LCD_BACKLIGHT ;

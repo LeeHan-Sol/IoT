@@ -6,8 +6,7 @@
 #include "LED.h"
 
 #define MAXTIMINGS 85
-#define DHTPIN 0
 
-void read_dht11_dat(char *, char *);
+void read_dht11_data(char *, char *, char *);
 
 #endif

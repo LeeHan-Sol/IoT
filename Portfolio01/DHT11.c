@@ -2,12 +2,15 @@
 
 int dht11_data[5] = {0, };
 
-void read_dht11_data(char * humidity, char * temperature)
+void read_dht11_data(char * humidity, char * temperature, char * set_temperature)
 {
 
   uint8_t laststate = HIGH;
   uint8_t counter = 0;
   uint8_t j = 0;
+
+  double d_temperature = 0.0;
+  double d_set_temperature = atof(set_temperature);
 
   dht11_data[0] = dht11_data[1] = dht11_data[2] = dht11_data[3] = dht11_data[4] = 0;
 
@@ -50,13 +53,18 @@ void read_dht11_data(char * humidity, char * temperature)
 
   if ((j >= 40) && (dht11_data[4] == ((dht11_data[0] + dht11_data[1] + dht11_data[2] + dht11_data[3]) & 0xff))) 
   {
-    printf("humidity = %d.%d%% Temperature = %d.%d`C \n", dht11_data[0], dht11_data[1], dht11_data[2], dht11_data[3]);
+    fprintf(stdout, "humidity = %d.%d%% Temperature = %d.%d`C set_temperature : %s \n", dht11_data[0], dht11_data[1], dht11_data[2], dht11_data[3], set_temperature);
 
-	if(dht11_data[3] >= 5) LED_ON();
-	else LED_OFF();
+	sprintf(temperature, "%d.%d", dht11_data[2], dht11_data[3]);
+	d_temperature = atof(temperature);
+
+	if(d_temperature >= d_set_temperature) 
+		LED_ON(LEDALARM);
+	else 
+		LED_OFF(LEDALARM);
 
 	sprintf(humidity, "humid: %d.%d%%", dht11_data[0], dht11_data[1]);
-	sprintf(temperature, "Temp: %d.%d'C", dht11_data[2], dht11_data[3]);
+	sprintf(temperature, "Temper: %d.%d'C", dht11_data[2], dht11_data[3]);
   }
   else 
 	  printf("Data get failed\n");

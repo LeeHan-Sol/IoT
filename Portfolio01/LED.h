@@ -3,10 +3,9 @@
 
 #include "IoT.h"
 
-#define LEDPIN 25
 
-void initLED();
-void LED_ON();
-void LED_OFF();
+void init_LED();
+void LED_ON(const int);
+void LED_OFF(const int);
 
 #endif
