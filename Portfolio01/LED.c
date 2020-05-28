@@ -2,8 +2,12 @@
 
 void init_LED()
 {
-	pinMode(LEDALARM, OUTPUT);
-	digitalWrite(LEDALARM, HIGH);
+	int led[LED_SIZE] = {LEDALARM, LEDPIN02, LEDBUTTON};
+	for(int i = 0; i < LED_SIZE; i++)
+	{
+		pinMode(led[i], OUTPUT);
+		digitalWrite(led[i], HIGH);
+	}
 
 	return ;
 }

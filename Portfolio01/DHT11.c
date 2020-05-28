@@ -44,12 +44,12 @@ void read_dht11_data(char * humidity, char * temperature, char * set_temperature
     }
   }
 
-  for(int i = 0; i < 5; i++)
-  {
-	  fprintf(stdout, "data[%d] : %x\n", i, dht11_data[i]);
-  }
+//  for(int i = 0; i < 5; i++)
+//  {
+//	  fprintf(stdout, "data[%d] : %x\n", i, dht11_data[i]);
+//  }
 
-  fprintf(stdout, "data[0~3] : %x\n", ((dht11_data[0] + dht11_data[1] + dht11_data[2] + dht11_data[3]) & 0xff));
+//  fprintf(stdout, "data[0~3] : %x\n", ((dht11_data[0] + dht11_data[1] + dht11_data[2] + dht11_data[3]) & 0xff));
 
   if ((j >= 40) && (dht11_data[4] == ((dht11_data[0] + dht11_data[1] + dht11_data[2] + dht11_data[3]) & 0xff))) 
   {

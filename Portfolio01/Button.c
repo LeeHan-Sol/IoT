@@ -5,10 +5,6 @@ void init_Button()
 	pinMode(BUTTONPIN01, INPUT);
 	pinMode(BUTTONPIN02, INPUT);
 	pinMode(BUTTONPIN03, INPUT);
-	
-	//버튼 전용 LED
-	pinMode(BUTTONLEDPIN, OUTPUT);
-	digitalWrite(BUTTONLEDPIN, HIGH);
 }
 
 int push_flag_Button(int flag, const int pin)
