@@ -21,7 +21,10 @@ void * thread_Button(void *);
 int flag = 0;
 char humidity[17] = {0,};
 char temperature[17] = {0,};
-char set_temperature[5] = {"23.0"};
+char set_max_temperature[5] = {"23.0"};
+char set_min_temperature[5] = {"17.0"};
+char set_max_humidity[5] = {"87.0"};
+char set_min_humidity[5] = {"87.0"};
 
 static sem_t sem_DHT11;
 static sem_t sem_Button;
@@ -260,16 +263,34 @@ void * thread_TextLCD(void * arg)
 		{
 			ClrLcd();
 			lcdLoc(LINE1);
-			typeln("Alarming temper");
+			typeln("Max Temp Set");
 			lcdLoc(LINE2);
-			typeln(set_temperature);
+			typeln(set_max_temperature);
 
 		}
 		else if(flag == 2)
 		{
+			ClrLcd();
+			lcdLoc(LINE1);
+			typeln("Min Temp Set");
+			lcdLoc(LINE2);
+			typeln(set_max_temperature);
 		}
 		else if(flag == 3)
 		{
+			ClrLcd();
+			lcdLoc(LINE1);
+			typeln("Max Humid Set");
+			lcdLoc(LINE2);
+			typeln(set_max_temperature);
+		}
+		else if(flag == 4)
+		{
+			ClrLcd();
+			lcdLoc(LINE1);
+			typeln("Miin Humid Set");
+			lcdLoc(LINE2);
+			typeln(set_max_temperature);
 		}
 
 		sem_wait(&sem_DHT11);
@@ -293,7 +314,7 @@ void * thread_DHT11(void * arg)
 	{
 		fprintf(stdout, "\t\tDHT11\n");
 
-		read_dht11_data(humidity, temperature, set_temperature);
+		read_dht11_data(humidity, temperature, set_max_temperature, set_min_temperature);
 		delay(2000);
 
 		sem_post(&sem_DHT11);
@@ -320,7 +341,7 @@ void * thread_Button(void * arg)
 		{
 			fputs("\t\t\t버튼이 눌렸다!.\n", stdout);
 			sem_wait(&sem_Button);
-			push_increase_Button(BUTTONPIN02, set_temperature);
+			push_increase_Button(BUTTONPIN02, set_max_temperature);
 
 			digitalWrite(LEDBUTTON, LOW);
 		}
@@ -328,7 +349,7 @@ void * thread_Button(void * arg)
 		{
 			fputs("\t\t\t버튼이 눌렸다!.\n", stdout);
 			sem_wait(&sem_Button);
-			push_decrease_Button(BUTTONPIN03, set_temperature);
+			push_decrease_Button(BUTTONPIN03, set_max_temperature);
 
 			digitalWrite(LEDBUTTON, LOW);
 		}
