@@ -8,6 +8,6 @@
 #define MAXTIMINGS 85
 
 void read_dht11_data(char *, char *, char *, char *, char *, char *);
-void display_dht11_data(char *, char *, char *, char *, char *, char *);
+//void display_dht11_data(char *, char *, char *, char *, char *, char *);
 
 #endif

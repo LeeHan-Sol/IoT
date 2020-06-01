@@ -138,7 +138,7 @@ void * listen_client(void * server_socket)
 
 		pthread_create(&thread_handle_client_id, NULL, handle_client, (void *)&client_socket);
 		pthread_detach(thread_handle_client_id);
-		fprintf(stdout, "Connected client%d IP : %s\n", client_socket, inet_ntoa(client_address.sin_addr));
+		fprintf(stdout, "Connected client%d IP,Port : %s, %d\n", client_socket, inet_ntoa(client_address.sin_addr), client_address.sin_port);
 	}
 
 	return NULL;
@@ -206,15 +206,15 @@ void * handle_client(void * arg)
 	}
 
 	client_count--;
-	pthread_mutex_unlock(&mutex_handle_client);
 	close(client_socket);
+	pthread_mutex_unlock(&mutex_handle_client);
 
 	return NULL;
 }
 
 void send_message(char * message, int length, int client_socket)
 {
-	fprintf(stdout, "send_message(%d) : %s\n", client_socket, message);
+	fprintf(stdout, "send_message to client%d : %s\n", client_socket, message);
 
 	pthread_mutex_lock(&mutex_handle_client);
 //	for(int i = 0; i < client_count; i++)
@@ -301,7 +301,7 @@ void * thread_DHT11(void * arg)
 {
 	for(;;)
 	{
-		fprintf(stdout, "\t\tDHT11\n");
+//		fprintf(stdout, "\t\tDHT11\n");
 
 		read_dht11_data(humidity, temperature, set_max_temperature, set_min_temperature, set_max_humidity, set_min_humidity);
 		delay(2000);

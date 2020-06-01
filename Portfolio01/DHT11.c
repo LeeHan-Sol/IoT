@@ -60,29 +60,31 @@ void read_dht11_data(char * humidity, char * temperature, char * set_max_tempera
   {
 	sprintf(humidity, "%d.%d",dht11_data[0], dht11_data[1]);
 	sprintf(temperature, "%d.%d", dht11_data[2], dht11_data[3]);
+
+//	display_dht11_data(temperature, humidity, set_max_temperature, set_min_temperature, set_max_humidity, set_min_humidity);
+
 	d_temperature = atof(temperature);
+	d_humidity = atof(humidity);
 
-	display_dht11_data(temperature, humidity, set_max_temperature, set_min_temperature, set_max_humidity, set_min_humidity);
-
-	if(d_temperature >= d_set_max_temperature || d_temperature <= d_set_min_temperature) 
+	if(d_temperature >= d_set_max_temperature || d_temperature <= d_set_min_temperature || d_humidity >= d_set_max_humidity || d_humidity <= d_set_min_humidity) 
 		LED_ON(LEDALARM);
 	else 
 		LED_OFF(LEDALARM);
   }
   else 
-	  fprintf(stdout, "    데이터 수신이 좋지 않습니다.\n\n");
+	  fprintf(stdout, "\tDHT11 데이터 수신이 좋지 않습니다.\n");
 
   return ;
 }
 
-void display_dht11_data(char * temperature, char * humidity, char * set_max_temperature, char * set_min_temperature, char * set_max_humidity, char * set_min_humidity)
-{
-	fprintf(stdout, "      ----------------------\n");
-	fprintf(stdout, "      |   온도   |   습도  |\n");
-	fprintf(stdout, "----------------------------\n");
-	fprintf(stdout, " 현재 |  %s'C  |  %s%%  |\n", temperature, humidity);
-	fprintf(stdout, "----------------------------\n");
-	fprintf(stdout, " 최소 |  %s'C  |  %s%%  |\n", set_min_temperature, set_min_humidity);
-	fprintf(stdout, " 최대 |  %s'C  |  %s%%  |\n", set_max_temperature, set_max_humidity);
-	fprintf(stdout, "----------------------------\n");
-}
+//void display_dht11_data(char * temperature, char * humidity, char * set_max_temperature, char * set_min_temperature, char * set_max_humidity, char * set_min_humidity)
+//{
+//	fprintf(stdout, "      ----------------------\n");
+//	fprintf(stdout, "      |   온도   |   습도  |\n");
+//	fprintf(stdout, "----------------------------\n");
+//	fprintf(stdout, " 현재 |  %s'C  |  %s%%  |\n", temperature, humidity);
+//	fprintf(stdout, "----------------------------\n");
+//	fprintf(stdout, " 최소 |  %s'C  |  %s%%  |\n", set_min_temperature, set_min_humidity);
+//	fprintf(stdout, " 최대 |  %s'C  |  %s%%  |\n", set_max_temperature, set_max_humidity);
+//	fprintf(stdout, "----------------------------\n");
+//}

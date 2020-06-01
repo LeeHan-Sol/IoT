@@ -15,7 +15,6 @@ int push_flag_Button(int flag, const int pin)
 
 	if(prev_state != digitalRead(pin))
 	{
-		fputs("\t\t\t버튼이 눌렸다!.\n", stdout);
 		flag++;
 		fprintf(stdout, "flag : %d\n", flag > 4 ? 0 : flag);
 		delay(20);
