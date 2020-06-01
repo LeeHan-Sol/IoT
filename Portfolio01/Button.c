@@ -9,23 +9,26 @@ void init_Button()
 
 int push_flag_Button(int flag, const int pin)
 {
+
 	int prev_state = 0;
 	delay(20);
 
 	if(prev_state != digitalRead(pin))
 	{
+		fputs("\t\t\t버튼이 눌렸다!.\n", stdout);
 		flag++;
+		fprintf(stdout, "flag : %d\n", flag > 4 ? 0 : flag);
 		delay(20);
 	}
 
-	if(flag > 1) flag = 0;
+	if(flag > 4) flag = 0;
 
 	return flag;
 }
 
-char * push_increase_Button(const int pin, char * set_temperature)
+char * push_increase_Button(const int pin, char * arg)
 {
-	double result = atof(set_temperature);
+	double result = atof(arg);
 
 	int prev_state = 0;
 	delay(20);
@@ -33,18 +36,18 @@ char * push_increase_Button(const int pin, char * set_temperature)
 	if(prev_state != digitalRead(pin))
 	{
 		result += 0.1;
-		sprintf(set_temperature, "%0.1f", result);
+		sprintf(arg, "%0.1f", result);
 
 		delay(20);
 		fprintf(stdout, "result : %f\n", result);
 	}
 
-	return set_temperature;
+	return arg;
 }
 
-char * push_decrease_Button(const int pin, char * set_temperature)
+char * push_decrease_Button(const int pin, char * arg)
 {
-	double result = atof(set_temperature);
+	double result = atof(arg);
 
 	int prev_state = 0;
 	delay(20);
@@ -52,11 +55,11 @@ char * push_decrease_Button(const int pin, char * set_temperature)
 	if(prev_state != digitalRead(pin))
 	{
 		result -= 0.1;
-		sprintf(set_temperature, "%0.1f", result);
+		sprintf(arg, "%0.1f", result);
 
 		delay(20);
 		fprintf(stdout, "result : %f\n", result);
 	}
 
-	return set_temperature;
+	return arg;
 }

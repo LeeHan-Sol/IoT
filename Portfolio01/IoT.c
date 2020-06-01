@@ -6,6 +6,8 @@
 #define MAX_CLIENT 5
 #define BUFFER_SIZE 1024
 
+void error_handling(const char *);
+
 void * listen_client(void *);
 void * handle_client(void *);
 void send_message(char *, int, int);
@@ -21,10 +23,10 @@ void * thread_Button(void *);
 int flag = 0;
 char humidity[17] = {0,};
 char temperature[17] = {0,};
-char set_max_temperature[5] = {"23.0"};
+char set_max_temperature[5] = {"27.0"};
 char set_min_temperature[5] = {"17.0"};
 char set_max_humidity[5] = {"87.0"};
-char set_min_humidity[5] = {"87.0"};
+char set_min_humidity[5] = {"60.0"};
 
 static sem_t sem_DHT11;
 static sem_t sem_Button;
@@ -51,22 +53,13 @@ int main(int argc, char * argv[])
 	server_address.sin_port = htons(atoi(argv[1]));
 
 	if(bind(server_socket, (struct sockaddr *)&server_address, sizeof(server_address)) == -1)
-	{
-		fprintf(stderr, "bind() error\n");
-		exit(1);
-	}
+		error_handling("bind() error");
 
 	if(listen(server_socket, 5) == -1)
-	{
-		fprintf(stderr, "listen() error\n");
-		exit(1);
-	}
+		error_handling("listen() error");
 
 	if(pthread_create(&thread_listen_client_id, NULL, listen_client, (void *)&server_socket) != 0)
-	{
-		fprintf(stderr, "pthread_create(listen_client)\n");
-		exit(1);
-	}
+		error_handling("pthread_create(listen_client)");
 
 	pthread_t * thread_TextLCD_id, * thread_DHT11_id, * thread_Button_id;
 
@@ -89,43 +82,21 @@ int main(int argc, char * argv[])
 	init_LED();
 
 	if(pthread_create(thread_TextLCD_id, NULL, thread_TextLCD, NULL) != 0)
-	{
-		fputs("pthread_create(TextLCD) error\n", stdout);
-		return -1;
-	}
+		error_handling("pthread_create(TextLCD) error");
 	if(pthread_create(thread_DHT11_id, NULL, thread_DHT11, NULL) != 0)
-	{
-		fputs("pthread_create(DHT11) error\n", stdout);
-		return -1;
-	}
+		error_handling("pthread_create(DHT11) error");
 	if(pthread_create(thread_Button_id, NULL, thread_Button, NULL) != 0)
-	{
-		fputs("pthread_create(Button) error\n", stdout);
-		return -1;
-	}
+		error_handling("pthread_create(Button) error");
 
 
 	if(pthread_detach(thread_listen_client_id) != 0)
-	{
-		fputs("pthread_join(listen_client) error\n", stdout);
-		return -1;
-	}
-
+		error_handling("pthread_join(listen_client) error");
 	if(pthread_join(*thread_TextLCD_id, NULL) != 0)
-	{
-		fputs("pthread_join(textlcd) error\n", stdout);
-		return -1;
-	}
+		error_handling("pthread_join(textlcd) error");
 	if(pthread_join(*thread_DHT11_id, NULL) != 0)
-	{
-		fputs("pthread_join(DHT11) error\n", stdout);
-		return -1;
-	}
+		error_handling("pthread_join(DHT11) error");
 	if(pthread_join(*thread_Button_id, NULL) != 0)
-	{
-		fputs("pthread_join(Button) error\n", stdout);
-		return -1;
-	}
+		error_handling("pthread_join(Button) error");
 
 	sem_destroy(&sem_DHT11);
 	sem_destroy(&sem_Button);
@@ -137,6 +108,14 @@ int main(int argc, char * argv[])
 	close(server_socket);
 
 	return 0 ;
+}
+
+void error_handling(const char * arg)
+{
+	fputs(arg, stderr);
+	fputc('\n', stderr);
+
+	exit(EXIT_FAILURE);
 }
 
 void * listen_client(void * server_socket)
@@ -159,7 +138,7 @@ void * listen_client(void * server_socket)
 
 		pthread_create(&thread_handle_client_id, NULL, handle_client, (void *)&client_socket);
 		pthread_detach(thread_handle_client_id);
-		fprintf(stdout, "Connected client IP : %s\n", inet_ntoa(client_address.sin_addr));
+		fprintf(stdout, "Connected client%d IP : %s\n", client_socket, inet_ntoa(client_address.sin_addr));
 	}
 
 	return NULL;
@@ -170,28 +149,29 @@ void * handle_client(void * arg)
 	int client_socket = *((int *)arg);
 	char message[BUFFER_SIZE] = {0,};
 
-//	while((string_length = read(client_socket, message, sizeof(message))) != 0)
 	while(1)
 	{
 		read(client_socket, message, sizeof(message));
 		if(strncmp(message, "1", 1) == 0)
 		{
 			memset(message, 0x00, strlen(message));
-			strcpy(message, temperature);
+			strcat(message, "1 ");
+			strcat(message, temperature);
+			strcat(message, " ");
+			strcat(message, humidity);
 		}
 		else if(strncmp(message, "2", 1) == 0)
 		{
 			memset(message, 0x00, strlen(message));
-			strcpy(message, humidity);
-		}
-		else if(strncmp(message, "3", 1) == 0)
-		{
-			memset(message, 0x00, strlen(message));
-			strcpy(message, temperature);
+			strcat(message, "2 ");
+			strcat(message, temperature);
 			strcat(message, " ");
 			strcat(message, humidity);
 		}
-		else if(!strncmp(message, "q", 1) || !strncmp(message, "Q", 1))
+		else if(strncmp(message, "3", 1) == 0)
+		{
+		}
+		else if(!strncmp(message, "q", 1) || !strncmp(message, "Q", 1) || !strncmp(message, "", 1))
 		{
 			fprintf(stdout, "Disconnected Client%d\n", client_socket);
 			break;
@@ -203,6 +183,8 @@ void * handle_client(void * arg)
 			
 			strcpy(message, "잘 확인하시고 다시 보내보시게..");
 			send_message(message, strlen(message), client_socket);
+
+			continue;
 		}
 
 		send_message(message, strlen(message), client_socket);
@@ -232,7 +214,7 @@ void * handle_client(void * arg)
 
 void send_message(char * message, int length, int client_socket)
 {
-	fprintf(stdout, "send_message : %s\n", message);
+	fprintf(stdout, "send_message(%d) : %s\n", client_socket, message);
 
 	pthread_mutex_lock(&mutex_handle_client);
 //	for(int i = 0; i < client_count; i++)
@@ -266,6 +248,7 @@ void * thread_TextLCD(void * arg)
 			typeln("Max Temp Set");
 			lcdLoc(LINE2);
 			typeln(set_max_temperature);
+			typeln("'C");
 
 		}
 		else if(flag == 2)
@@ -274,7 +257,8 @@ void * thread_TextLCD(void * arg)
 			lcdLoc(LINE1);
 			typeln("Min Temp Set");
 			lcdLoc(LINE2);
-			typeln(set_max_temperature);
+			typeln(set_min_temperature);
+			typeln("'C");
 		}
 		else if(flag == 3)
 		{
@@ -282,27 +266,32 @@ void * thread_TextLCD(void * arg)
 			lcdLoc(LINE1);
 			typeln("Max Humid Set");
 			lcdLoc(LINE2);
-			typeln(set_max_temperature);
+			typeln(set_max_humidity);
+			typeln("%");
 		}
 		else if(flag == 4)
 		{
 			ClrLcd();
 			lcdLoc(LINE1);
-			typeln("Miin Humid Set");
+			typeln("Min Humid Set");
 			lcdLoc(LINE2);
-			typeln(set_max_temperature);
+			typeln(set_min_humidity);
+			typeln("%");
 		}
 
 		sem_wait(&sem_DHT11);
 		sem_wait(&sem_Button);
 
-		delay(2000);
+		delay(20);
 		ClrLcd();
 		lcdLoc(LINE1);
+		typeln("Temper: ");
 		typeln(temperature);
-//		typeln("Hello World!");
+		typeln("'C");
 		lcdLoc(LINE2);
+		typeln("Humid: ");
 		typeln(humidity);
+		typeln("%");
 	}
 
 	return NULL;
@@ -314,7 +303,7 @@ void * thread_DHT11(void * arg)
 	{
 		fprintf(stdout, "\t\tDHT11\n");
 
-		read_dht11_data(humidity, temperature, set_max_temperature, set_min_temperature);
+		read_dht11_data(humidity, temperature, set_max_temperature, set_min_temperature, set_max_humidity, set_min_humidity);
 		delay(2000);
 
 		sem_post(&sem_DHT11);
@@ -325,31 +314,40 @@ void * thread_DHT11(void * arg)
 
 void * thread_Button(void * arg)
 {
-	fprintf(stdout, "flag : %d\n", flag);
 	for(;;)
 	{
 		if(digitalRead(BUTTONPIN01) == 0)
 		{
-			fputs("\t\t\t버튼이 눌렸다!.\n", stdout);
 			sem_wait(&sem_Button);
 			flag = push_flag_Button(flag, BUTTONPIN01);
 
-			fprintf(stdout, "flag : %d\n", flag);
 			digitalWrite(LEDBUTTON, LOW);
 		}
-		else if(digitalRead(BUTTONPIN02) == 0 && flag == 1)
+		else if(digitalRead(BUTTONPIN02) == 0 && flag > 0)
 		{
-			fputs("\t\t\t버튼이 눌렸다!.\n", stdout);
 			sem_wait(&sem_Button);
-			push_increase_Button(BUTTONPIN02, set_max_temperature);
-
+			if(flag == 1)
+				push_increase_Button(BUTTONPIN02, set_max_temperature);
+			else if(flag == 2)
+				push_increase_Button(BUTTONPIN02, set_min_temperature);
+			else if(flag == 3)
+				push_increase_Button(BUTTONPIN02, set_max_humidity);
+			else if(flag == 4)
+				push_increase_Button(BUTTONPIN02, set_min_humidity);
+			
 			digitalWrite(LEDBUTTON, LOW);
 		}
-		else if(digitalRead(BUTTONPIN03) == 0 && flag == 1)
+		else if(digitalRead(BUTTONPIN03) == 0 && flag > 0)
 		{
-			fputs("\t\t\t버튼이 눌렸다!.\n", stdout);
 			sem_wait(&sem_Button);
-			push_decrease_Button(BUTTONPIN03, set_max_temperature);
+			if(flag == 1)
+				push_decrease_Button(BUTTONPIN03, set_max_temperature);
+			else if(flag == 2)
+				push_decrease_Button(BUTTONPIN03, set_min_temperature);
+			else if(flag == 3)
+				push_decrease_Button(BUTTONPIN03, set_max_humidity);
+			else if(flag == 4)
+				push_decrease_Button(BUTTONPIN03, set_min_humidity);
 
 			digitalWrite(LEDBUTTON, LOW);
 		}
@@ -357,6 +355,7 @@ void * thread_Button(void * arg)
 		{
 			digitalWrite(LEDBUTTON, HIGH);
 		}
+
 
 		sem_post(&sem_Button);
 	}
