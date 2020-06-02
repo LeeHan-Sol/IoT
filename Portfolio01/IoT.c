@@ -2,11 +2,10 @@
 #include "DHT11.h"
 #include "TextLCD.h"
 #include "Button.h"
+#include "Error.h"
 
 #define MAX_CLIENT 5
 #define BUFFER_SIZE 1024
-
-void error_handling(const char *);
 
 void * listen_client(void *);
 void * handle_client(void *);
@@ -108,14 +107,6 @@ int main(int argc, char * argv[])
 	close(server_socket);
 
 	return 0 ;
-}
-
-void error_handling(const char * arg)
-{
-	fputs(arg, stderr);
-	fputc('\n', stderr);
-
-	exit(EXIT_FAILURE);
 }
 
 void * listen_client(void * server_socket)
