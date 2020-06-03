@@ -8,16 +8,17 @@
 #include <semaphore.h>
 
 #define BUF_SIZE 1024
+#define SETTING_SIZE 10
 
 typedef struct Alarm
 {
 	char filename[100];
 	
-	char max_temperature[5];
-	char min_temperature[5];
-	char max_humidity[5];
-	char min_humidity[5];
-	char period[3];
+	char max_temperature[SETTING_SIZE];
+	char min_temperature[SETTING_SIZE];
+	char max_humidity[SETTING_SIZE];
+	char min_humidity[SETTING_SIZE];
+	char period[SETTING_SIZE];
 
 	void (*init_alarm)(struct Alarm *, const char *);
 	void (*set_alarm_info)(struct Alarm *);
@@ -27,7 +28,7 @@ Alarm alarm_info;
 void init_alarm(Alarm *, const char *);
 void set_alarm_info(Alarm *);
 
-void * send_msg(void *);
+void * user_interface(void *);
 void * recv_msg(void *);
 void * send_message(void *);
 void error_handling(char *);
@@ -41,9 +42,16 @@ void display_change_alarm_info_period();
 
 static sem_t sem_receive;
 static sem_t sem_send;
+static sem_t sem_alarm;
 
 int main(int argc, char * argv[])
 {
+	if(argc != 4)
+	{
+		fprintf(stderr, "Usage : %s <IP> <PORT> <Setting File>\n", argv[0]);
+		exit(1);
+	}
+
 	alarm_info.init_alarm = init_alarm;
 	alarm_info.init_alarm(&alarm_info, argv[3]);
 	alarm_info.set_alarm_info(&alarm_info);
@@ -55,12 +63,6 @@ int main(int argc, char * argv[])
 	memset(&rcv_thread, 0x00, sizeof(pthread_t));
 	memset(&send_message_thread, 0x00, sizeof(pthread_t));
 	void * thread_return = NULL;
-	
-	if(argc != 4)
-	{
-		fprintf(stderr, "Usage : %s <IP> <PORT> <Setting File>\n", argv[0]);
-		exit(1);
-	}
 
 	sock = socket(PF_INET, SOCK_STREAM, 0);
 
@@ -76,8 +78,9 @@ int main(int argc, char * argv[])
 
 	sem_init(&sem_receive, 0, 0);
 	sem_init(&sem_send, 0, 1);
+	sem_init(&sem_alarm, 0, 1);
 
-	pthread_create(&snd_thread, NULL, send_msg, (void *)&sock);
+	pthread_create(&snd_thread, NULL, user_interface, (void *)&sock);
 	pthread_create(&rcv_thread, NULL, recv_msg, (void *)&sock);
 	pthread_create(&send_message_thread, NULL, send_message, (void *)&sock);
 	pthread_join(snd_thread, &thread_return);
@@ -86,6 +89,7 @@ int main(int argc, char * argv[])
 
 	sem_destroy(&sem_receive);
 	sem_destroy(&sem_send);
+	sem_destroy(&sem_alarm);
 
 	close(sock);
 
@@ -119,7 +123,7 @@ void set_alarm_info(Alarm * alarm_info)
 			fprintf(file_alarm_info, "20.0\n");
 			fprintf(file_alarm_info, "87.0\n");
 			fprintf(file_alarm_info, "60.0\n");
-			fprintf(file_alarm_info, "1\n");
+			fprintf(file_alarm_info, "1.0\n");
 			
 			fclose(file_alarm_info);
 			
@@ -127,23 +131,22 @@ void set_alarm_info(Alarm * alarm_info)
 		}
 	}
 
-	fgets(alarm_info->max_temperature, 5, (FILE *)file_alarm_info);
-	fgetc((FILE *)file_alarm_info);
-	fgets(alarm_info->min_temperature, 5, (FILE *)file_alarm_info);
-	fgetc((FILE *)file_alarm_info);
-	fgets(alarm_info->max_humidity, 5, (FILE *)file_alarm_info);
-	fgetc((FILE *)file_alarm_info);
-	fgets(alarm_info->min_humidity, 5, (FILE *)file_alarm_info);
-	fgetc((FILE *)file_alarm_info);
-	fgets(alarm_info->period, 3, (FILE *)file_alarm_info);
-	fgetc((FILE *)file_alarm_info);
+	fgets(alarm_info->max_temperature, SETTING_SIZE, (FILE *)file_alarm_info);
+	fgets(alarm_info->min_temperature, SETTING_SIZE, (FILE *)file_alarm_info);
+	fgets(alarm_info->max_humidity, SETTING_SIZE, (FILE *)file_alarm_info);
+	fgets(alarm_info->min_humidity, SETTING_SIZE, (FILE *)file_alarm_info);
+	fgets(alarm_info->period, SETTING_SIZE, (FILE *)file_alarm_info);
 
+	alarm_info->max_temperature[strlen(alarm_info->max_temperature) - 1] = 0x00;
+	alarm_info->min_temperature[strlen(alarm_info->min_temperature) - 1] = 0x00;
+	alarm_info->max_humidity[strlen(alarm_info->max_humidity) - 1] = 0x00;
+	alarm_info->min_humidity[strlen(alarm_info->min_humidity) - 1] = 0x00;
 	alarm_info->period[strlen(alarm_info->period) - 1] = 0x00;
 
 	fclose(file_alarm_info);
 }
 
-void * send_msg(void * arg)
+void * user_interface(void * arg)
 {
 	int sock = *((int *)arg);
 	char buffer[BUF_SIZE] = {0,};
@@ -155,6 +158,8 @@ void * send_msg(void * arg)
 		fprintf(stdout, "|1. 현재 온 습도 정보|\n");
 		fprintf(stdout, "----------------------\n");
 		fprintf(stdout, "|2. 알림 서비스      |\n");
+		fprintf(stdout, "----------------------\n");
+		fprintf(stdout, "|3. 나가기           |\n");
 		fprintf(stdout, "----------------------\n");
 		fputs(">> ", stdout);
 		fgets(buffer, BUF_SIZE, stdin);
@@ -172,15 +177,19 @@ void * send_msg(void * arg)
 		}
 		else if(!strcmp(buffer, "2"))
 		{
+			sem_wait(&sem_alarm);
 			display_alarm_info_service();
+			sem_post(&sem_alarm);
+		}
+		else if(!strcmp(buffer, "3"))
+		{
+			exit(1);
 		}
 		else
 		{
-			fputs("잘 확인하시고 다시 입력해보시게..\n\n", stdout);
+			fputs("다시 입력해주세요.\n\n", stdout);
 			sem_post(&sem_send);
 		}
-
-//		write(sock , name_msg, strlen(name_msg));
 	}
 	
 	return NULL;
@@ -214,38 +223,6 @@ void * recv_msg(void * arg)
 	return NULL;
 }
 
-void compare_alarm_info(char * arg)
-{
-	char temperature[5] ={0,};
-	char humidity[5] = {0,};
-
-	strncpy(temperature, arg + 2, 4);
-	strncpy(humidity, arg + 7, 4);
-
-	fprintf(stdout, "\n\t\t-알람---------------\n");
-	if(strcmp(temperature, alarm_info.max_temperature) >= 0)
-	{
-		fprintf(stdout, "\t\t| 온도가 높습니다! |\n");
-	}
-	else if(strcmp(temperature, alarm_info.min_temperature) <= 0)
-	{
-		fprintf(stdout, "\t\t| 온도가 낮습니다! |\n");
-	}
-
-	if(strcmp(humidity, alarm_info.max_humidity) >= 0)
-	{
-		fprintf(stdout, "\t\t| 습도가 높습니다! |\n");
-	}
-	else if(strcmp(humidity, alarm_info.min_humidity) <= 0)
-	{
-		fprintf(stdout, "\t\t| 습도가 낮습니다! |\n");
-	}
-
-	fprintf(stdout, "\t\t--------------------\r\n\r\n>> ");
-
-	return ;
-}
-
 void * send_message(void * arg)
 {
 	int sock =*((int *)arg);
@@ -253,9 +230,12 @@ void * send_message(void * arg)
 
 	for(;;)
 	{
-		period = atoi(alarm_info.period) * 60;
+		period = (int)(atof(alarm_info.period) * 60);
 		sleep(period);
+
+		sem_wait(&sem_alarm);
 		write(sock, "2", 1);
+		sem_post(&sem_alarm);
 		
 		sem_post(&sem_receive);
 	}
@@ -263,18 +243,55 @@ void * send_message(void * arg)
 	return NULL;
 }
 
+void compare_alarm_info(char * arg)
+{
+	char temperature[SETTING_SIZE] ={0,};
+	char humidity[SETTING_SIZE] = {0,};
+
+	strncpy(temperature, arg + 2, 4);
+	strncpy(humidity, arg + 7, 4);
+
+	fprintf(stdout, "\n\t\t-알람-----------------\n");
+	if(strcmp(temperature, alarm_info.max_temperature) >= 0)
+	{
+		fprintf(stdout, "\t\t|  온도가 높습니다!  |\n");
+	}
+	else if(strcmp(temperature, alarm_info.min_temperature) <= 0)
+	{
+		fprintf(stdout, "\t\t|  온도가 낮습니다!  |\n");
+	}
+
+	if(strcmp(humidity, alarm_info.max_humidity) >= 0)
+	{
+		fprintf(stdout, "\t\t|  습도가 높습니다!  |\n");
+	}
+	else if(strcmp(humidity, alarm_info.min_humidity) <= 0)
+	{
+		fprintf(stdout, "\t\t|  습도가 낮습니다!  |\n");
+	}
+	
+	if(strcmp(temperature, alarm_info.max_temperature) <= 0 && strcmp(temperature, alarm_info.min_temperature) >= 0 && strcmp(humidity, alarm_info.max_humidity) <= 0 && strcmp(humidity, alarm_info.min_humidity) >= 0)
+	{
+		fprintf(stdout, "\t\t| 쾌적한 환경입니다. |\n");
+	}
+
+	fprintf(stdout, "\t\t----------------------\n");
+
+	return ;
+}
+
 void error_handling(char * msg)
 {
 	fputs(msg, stdout);
 	fputc('\n', stdout);
 
-	return ;
+	exit(EXIT_FAILURE);
 }
 
 void display_dht11(const char * message)
 {
-	char temperature[5] = {0,};
-	char humidity[5] = {0,};
+	char temperature[SETTING_SIZE] = {0,};
+	char humidity[SETTING_SIZE] = {0,};
 
 	strncpy(temperature, message + 2, 4);
 	strncpy(humidity, message + 7, 4);
@@ -341,7 +358,7 @@ void display_alarm_info_service()
 		}
 		else
 		{
-			fputs("잘 확인하시고 다시 입력해보시게..\n", stdout);
+			fputs("다시 입력해주세요.\n", stdout);
 		}
 
 	}
@@ -413,7 +430,12 @@ void display_change_alarm_info(const char * arg)
 			fgets(buffer, BUF_SIZE, stdin);
 			buffer[strlen(buffer) - 1] = 0x00;
 
+			memset(alarm_info.period, 0x00, sizeof(char) * SETTING_SIZE);
 			strcpy(alarm_info.period, buffer);
+		}
+		else
+		{
+			fputs("다시 입력해주세요.\n", stdout);
 		}
 
 		fprintf(stdout, "변경되었습니다.\n\n");
@@ -432,12 +454,12 @@ void display_change_alarm_info_period()
 	fprintf(stdout, "알림 주기를 변경합니다.\n");
 	fprintf(stdout, ">> ");
 
-	fgets(buffer, 4, stdin);
+	fgets(buffer, SETTING_SIZE, stdin);
 	buffer[strlen(buffer) - 1] = 0x00;
 
 	strcpy(alarm_info.period, buffer);
 
-	fprintf(stdout, "변경되었습니다.\n");
+	fprintf(stdout, "변경되었습니다.\n\n");
 
 	return ;
 }
