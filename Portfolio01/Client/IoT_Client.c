@@ -211,13 +211,14 @@ void * recv_msg(void * arg)
 		if(!strncmp(buffer, "1", 1))
 		{
 			display_dht11(buffer);
+			sem_post(&sem_send);
 		}
 		else if(!strncmp(buffer, "2", 1))
 		{
 			compare_alarm_info(buffer);
+			sem_post(&sem_send);
 		}
 
-		sem_post(&sem_send);
 	}
 	
 	return NULL;
