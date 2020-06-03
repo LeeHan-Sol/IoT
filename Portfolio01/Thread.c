@@ -24,7 +24,7 @@ void * listen_client(void * server_socket)
 	pthread_t thread_handle_client_id;
 	memset(&thread_handle_client_id, 0x00, sizeof(pthread_t));
 
-	while(1)
+	for(;;)
 	{
 		client_address_size = sizeof(client_address);
 		client_socket = accept(*((int *)server_socket), (struct sockaddr *)&client_address, &client_address_size);
@@ -46,7 +46,7 @@ void * handle_client(void * arg)
 	int client_socket = *((int *)arg);
 	char message[BUFFER_SIZE] = {0,};
 
-	while(1)
+	for(;;)
 	{
 		read(client_socket, message, sizeof(message));
 		if(strncmp(message, "1", 1) == 0)
@@ -250,7 +250,6 @@ void * thread_Button(void * arg)
 		{
 			digitalWrite(LEDBUTTON, HIGH);
 		}
-
 
 		sem_post(&sem_Button);
 	}

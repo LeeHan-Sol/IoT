@@ -29,7 +29,7 @@ int main(int argc, char * argv[])
 		exit(1);
 	}
 
-	pthread_mutex_init(&mutex_handle_client, NULL);
+	//서버 열기
 	server_socket = socket(PF_INET, SOCK_STREAM, 0);
 
 	server_address.sin_family = AF_INET;
@@ -42,8 +42,10 @@ int main(int argc, char * argv[])
 	if(listen(server_socket, 5) == -1)
 		error_handling("listen() error");
 
+	//listen 전용 쓰레드 생성
 	if(pthread_create(&thread_listen_client_id, NULL, listen_client, (void *)&server_socket) != 0)
 		error_handling("pthread_create(listen_client)");
+	pthread_mutex_init(&mutex_handle_client, NULL);
 
 	pthread_t * thread_TextLCD_id, * thread_DHT11_id, * thread_Button_id;
 
@@ -61,10 +63,11 @@ int main(int argc, char * argv[])
 	if (wiringPiSetup() == -1) exit(1);
 
 	fd = wiringPiI2CSetup(I2C_ADDR);
-	lcd_init(); // setup LCD
+	lcd_init();
 	init_Button();
 	init_LED();
 
+	//센서 쓰레드 생성
 	if(pthread_create(thread_TextLCD_id, NULL, thread_TextLCD, NULL) != 0)
 		error_handling("pthread_create(TextLCD) error");
 	if(pthread_create(thread_DHT11_id, NULL, thread_DHT11, NULL) != 0)
@@ -72,7 +75,7 @@ int main(int argc, char * argv[])
 	if(pthread_create(thread_Button_id, NULL, thread_Button, NULL) != 0)
 		error_handling("pthread_create(Button) error");
 
-
+	//쓰레드 안전하게 종료
 	if(pthread_detach(thread_listen_client_id) != 0)
 		error_handling("pthread_join(listen_client) error");
 	if(pthread_join(*thread_TextLCD_id, NULL) != 0)
@@ -82,13 +85,16 @@ int main(int argc, char * argv[])
 	if(pthread_join(*thread_Button_id, NULL) != 0)
 		error_handling("pthread_join(Button) error");
 
+	//뮤텍스, 세마포어 및 쓰레드 할당해제
 	sem_destroy(&sem_DHT11);
 	sem_destroy(&sem_Button);
+	pthread_mutex_destroy(&mutex_handle_client);
 
 	free(thread_TextLCD_id);
 	free(thread_DHT11_id);
 	free(thread_Button_id);
 
+	//서버 소켓fd 닫기
 	close(server_socket);
 
 	return 0 ;
