@@ -15,7 +15,7 @@ void init_LED()
 void LED_ON(const int pin)
 {
 	digitalWrite(pin, LOW);
-	fputs("LED ON\n", stdout);
+//	fputs("LED ON\n", stdout);
 
 	return ;
 }
@@ -23,7 +23,7 @@ void LED_ON(const int pin)
 void LED_OFF(const int pin)
 {
 	digitalWrite(pin, HIGH);
-	fputs("LED OFF\n", stdout);
+//	fputs("LED OFF\n", stdout);
 
 	return ;
 }

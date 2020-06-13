@@ -27,4 +27,8 @@
 #define BUTTONPIN02 22
 #define BUTTONPIN03 23
 
+//TCP
+#define MAX_CLIENT 5
+#define BUFFER_SIZE 1024
+
 #endif
