@@ -6,7 +6,6 @@ List * list = NULL;
 void * listen_client(void * server_socket)
 {
 	int client_socket = 0;
-	fputs("hahahaha\n", stdout);
 	
 	list = createList();
 
@@ -57,8 +56,8 @@ void * handle_client(void * arg)
 
 	pthread_mutex_lock(&mutex_handle_client);
 	list->popItem(list, node_client);
-	close(client_socket);
 	pthread_mutex_unlock(&mutex_handle_client);
+	close(client_socket);
 
 	return NULL;
 }

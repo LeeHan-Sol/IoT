@@ -1,6 +1,5 @@
 #include "IoT.h"
 #include "Thread.h"
-#include "Error.h"
 
 extern pthread_mutex_t mutex_handle_client;
 
@@ -34,7 +33,7 @@ int main(int argc, char *argv[])
 		error_handling("pthread_create(listen_client) error");
 	pthread_mutex_init(&mutex_handle_client, NULL);
 
-	if(pthread_detach(thread_listen_client) != 0)
+	if(pthread_join(thread_listen_client, NULL) != 0)
 		error_handling("pthread_detach(listen_client) error");
 
 	pthread_mutex_destroy(&mutex_handle_client);

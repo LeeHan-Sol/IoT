@@ -1,5 +1,4 @@
 #include "Node.h"
-#include "Error.h"
 
 Node * createNode(const char * data, Node * prev, Node * next)
 {

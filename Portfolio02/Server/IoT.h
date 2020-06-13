@@ -13,4 +13,6 @@
 #include <pthread.h>
 #include <semaphore.h>
 
+#include "Error.h"
+
 #endif
