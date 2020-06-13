@@ -7,7 +7,7 @@
 #include <pthread.h>
 #include <semaphore.h>
 
-#define BUF_SIZE 1024
+#define BUF_SIZE 512
 #define SETTING_SIZE 10
 
 typedef struct Alarm
