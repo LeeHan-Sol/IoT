@@ -15,6 +15,8 @@ extern pthread_mutex_t mutex_handle_client;
 //extern sem_t sem_DHT11;
 //extern sem_t sem_Button;
 
+List * list = NULL;
+
 int main(int argc, char * argv[])
 {
 	int server_socket = 0;
@@ -35,6 +37,8 @@ int main(int argc, char * argv[])
 	server_address.sin_family = AF_INET;
 	server_address.sin_addr.s_addr = htonl(INADDR_ANY);
 	server_address.sin_port = htons(atoi(argv[1]));
+
+	list = createList();
 
 	if(bind(server_socket, (struct sockaddr *)&server_address, sizeof(server_address)) == -1)
 		error_handling("bind() error");
@@ -90,6 +94,7 @@ int main(int argc, char * argv[])
 	sem_destroy(&sem_Button);
 	pthread_mutex_destroy(&mutex_handle_client);
 
+	free(list);
 	free(thread_TextLCD_id);
 	free(thread_DHT11_id);
 	free(thread_Button_id);
