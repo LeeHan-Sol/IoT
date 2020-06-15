@@ -1,13 +1,13 @@
 #include "Thread.h"
 
 pthread_mutex_t mutex_handle_client;
-List * list = NULL;
+List * list_client_fd = NULL;
 
 void * listen_client(void * server_socket)
 {
 	int client_socket = 0;
 	
-	list = createList();
+	list_client_fd = createList();
 
 	struct sockaddr_in client_address;
 	memset(&client_address, 0x00, sizeof(struct sockaddr_in));
@@ -21,10 +21,10 @@ void * listen_client(void * server_socket)
 		client_socket = accept(*((int *)server_socket), (struct sockaddr *)&client_address, &client_address_size);
 
 		pthread_mutex_lock(&mutex_handle_client);
-		list->pushRear(list, client_socket);
+		list_client_fd->pushRear(list_client_fd, client_socket);
 		pthread_mutex_unlock(&mutex_handle_client);
 
-		pthread_create(&thread_handle_client, NULL, handle_client, (void *)list->tail);
+		pthread_create(&thread_handle_client, NULL, handle_client, (void *)list_client_fd->tail);
 		pthread_detach(thread_handle_client);
 		fprintf(stdout, "Connected client%d IP, PORT : %s, %d\n", client_socket, inet_ntoa(client_address.sin_addr), client_address.sin_port);
 	}
@@ -57,7 +57,7 @@ void * handle_client(void * arg)
 	}
 
 	pthread_mutex_lock(&mutex_handle_client);
-	list->popItem(list, node_client);
+	list_client_fd->popItem(list_client_fd, node_client);
 	pthread_mutex_unlock(&mutex_handle_client);
 	close(client_socket);
 
